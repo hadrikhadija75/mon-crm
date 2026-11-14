@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon CRM</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Mon CRM</h1>
+    <input id="search" type="search" placeholder="Rechercher une entreprise, un contact…" aria-label="Rechercher">
+    <div class="actions">
+      <button id="btn-new" class="primary">+ Nouveau prospect</button>
+      <button id="btn-export" title="Télécharger une sauvegarde">Exporter</button>
+      <label class="button" title="Restaurer une sauvegarde">
+        Importer <input id="file-import" type="file" accept="application/json" hidden>
+      </label>
+    </div>
+  </header>
+
+  <main id="board" class="board" aria-label="Pipeline de vente"></main>
+
+  <dialog id="dialog">
+    <form id="form" method="dialog">
+      <h2 id="form-title">Nouveau prospect</h2>
+      <input type="hidden" name="id">
+      <label>Entreprise *<input name="company" required></label>
+      <label>Contact<input name="contact" placeholder="Prénom Nom"></label>
+      <div class="row">
+        <label>Téléphone<input name="phone" type="tel"></label>
+        <label>Email<input name="email" type="email"></label>
+      </div>
+      <label>Site actuel<input name="website" placeholder="https://… (vide si pas de site)"></label>
+      <label>Étape<select name="stage"></select></label>
+      <label>Notes<textarea name="notes" rows="4"></textarea></label>
+      <div class="form-actions">
+        <button type="button" id="btn-delete" class="danger">Supprimer</button>
+        <span class="spacer"></span>
+        <button type="button" id="btn-cancel">Annuler</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
