@@ -19,6 +19,8 @@
     </div>
   </header>
 
+  <nav id="spaces" class="spaces" aria-label="Espaces"></nav>
+
   <main id="board" class="board" aria-label="Pipeline de vente"></main>
 
   <dialog id="dialog">
@@ -32,7 +34,11 @@
         <label>Email<input name="email" type="email"></label>
       </div>
       <label>Site actuel<input name="website" placeholder="https://… (vide si pas de site)"></label>
-      <label>Étape<select name="stage"></select></label>
+      <div class="row">
+        <label>Espace<select name="space"></select></label>
+        <label>Étape<select name="stage"></select></label>
+      </div>
+      <label>Relancer le<input name="followUp" type="date"></label>
       <label>Notes<textarea name="notes" rows="4"></textarea></label>
       <div class="form-actions">
         <button type="button" id="btn-delete" class="danger">Supprimer</button>

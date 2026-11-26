@@ -4,19 +4,32 @@ const STORAGE_KEY = "mon-crm-prospects";
 const STAGES = [
   { id: "todo", label: "À contacter", color: "var(--s-todo)" },
   { id: "talk", label: "En discussion", color: "var(--s-talk)" },
+  { id: "followup", label: "À relancer", color: "var(--s-followup)" },
   { id: "won", label: "Gagné", color: "var(--s-won)" },
   { id: "lost", label: "Perdu", color: "var(--s-lost)" },
 ];
+const SPACES = [
+  { id: "commerces", label: "Commerces" },
+  { id: "manufactures", label: "Manufactures" },
+];
+const SPACE_KEY = "mon-crm-espace";
 
 let prospects = load();
+prospects.forEach((p) => { if (!SPACES.some((s) => s.id === p.space)) p.space = "commerces"; });
 let query = "";
+let currentSpace = SPACES.some((s) => s.id === localStorage.getItem(SPACE_KEY))
+  ? localStorage.getItem(SPACE_KEY)
+  : "commerces";
 
 const board = document.getElementById("board");
+const spacesNav = document.getElementById("spaces");
 const dialog = document.getElementById("dialog");
 const form = document.getElementById("form");
 const stageSelect = form.elements.stage;
+const spaceSelect = form.elements.space;
 
 STAGES.forEach((s) => stageSelect.add(new Option(s.label, s.id)));
+SPACES.forEach((s) => spaceSelect.add(new Option(s.label, s.id)));
 
 // ---------- Stockage ----------
 function load() {
@@ -43,10 +56,29 @@ function matches(p) {
     .includes(query);
 }
 
+function renderSpaces() {
+  spacesNav.innerHTML = "";
+  for (const s of SPACES) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "space-tab" + (s.id === currentSpace ? " active" : "");
+    btn.setAttribute("aria-pressed", s.id === currentSpace);
+    const n = prospects.filter((p) => p.space === s.id).length;
+    btn.innerHTML = `${s.label} <span class="count">${n}</span>`;
+    btn.addEventListener("click", () => {
+      currentSpace = s.id;
+      localStorage.setItem(SPACE_KEY, s.id);
+      render();
+    });
+    spacesNav.appendChild(btn);
+  }
+}
+
 function render() {
+  renderSpaces();
   board.innerHTML = "";
   for (const stage of STAGES) {
-    const items = prospects.filter((p) => p.stage === stage.id && matches(p));
+    const items = prospects.filter((p) => p.space === currentSpace && p.stage === stage.id && matches(p));
     const col = document.createElement("section");
     col.className = "column";
     col.style.setProperty("--stage-color", stage.color);
@@ -88,6 +120,14 @@ function siteLink(url) {
   return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
 }
 
+function followUpLine(p) {
+  if (!p.followUp || p.stage === "won" || p.stage === "lost") return "";
+  const today = new Date().toISOString().slice(0, 10);
+  const [y, m, d] = p.followUp.split("-");
+  const late = p.followUp <= today;
+  return `<div class="followup${late ? " due" : ""}">${late ? "⏰ À relancer" : "Relancer le"} ${d}/${m}/${y}</div>`;
+}
+
 function cardFor(p) {
   const card = document.createElement("article");
   card.className = "card";
@@ -97,7 +137,8 @@ function cardFor(p) {
     <strong>${escapeHtml(p.company)}</strong>
     ${contactLine ? `<div class="meta">${contactLine}</div>` : ""}
     ${p.email ? `<div class="meta">${escapeHtml(p.email)}</div>` : ""}
-    <div class="meta">${siteLink(p.website)}</div>`;
+    <div class="meta">${siteLink(p.website)}</div>
+    ${followUpLine(p)}`;
   card.addEventListener("click", (e) => {
     if (e.target.tagName !== "A") openForm(p);
   });
@@ -114,7 +155,7 @@ function openForm(p) {
   form.reset();
   document.getElementById("form-title").textContent = p ? "Modifier le prospect" : "Nouveau prospect";
   document.getElementById("btn-delete").hidden = !p;
-  const data = p || { stage: "todo" };
+  const data = p || { stage: "todo", space: currentSpace };
   for (const el of form.elements) {
     if (el.name && el.name in data) el.value = data[el.name] ?? "";
   }
@@ -173,7 +214,10 @@ document.getElementById("file-import").addEventListener("change", async (e) => {
     if (!Array.isArray(data)) throw new Error();
     if (confirm(`Importer ${data.length} prospect(s) ? Les données actuelles seront remplacées.`)) {
       prospects = data.filter((p) => p && p.id && p.company);
-      prospects.forEach((p) => { if (!STAGES.some((s) => s.id === p.stage)) p.stage = "todo"; });
+      prospects.forEach((p) => {
+        if (!STAGES.some((s) => s.id === p.stage)) p.stage = "todo";
+        if (!SPACES.some((s) => s.id === p.space)) p.space = "commerces";
+      });
       save();
       render();
     }

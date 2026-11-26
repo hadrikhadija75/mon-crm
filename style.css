@@ -8,6 +8,7 @@
   --danger: #dc2626;
   --s-todo: #64748b;
   --s-talk: #d97706;
+  --s-followup: #7c3aed;
   --s-won: #16a34a;
   --s-lost: #9ca3af;
 }
@@ -60,7 +61,7 @@ button:hover, .button:hover { border-color: var(--muted); }
 
 .board {
   display: grid;
-  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
   gap: 12px;
   padding: 16px;
   overflow-x: auto;
@@ -97,6 +98,18 @@ button:hover, .button:hover { border-color: var(--muted); }
 .card strong { display: block; }
 .card .meta { color: var(--muted); font-size: 0.85rem; margin-top: 4px; word-break: break-word; }
 .card a { color: var(--primary); }
+.card .followup { font-size: 0.8rem; margin-top: 6px; color: var(--s-followup); }
+.card .followup.due { color: var(--danger); font-weight: 600; }
+
+.spaces {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+.space-tab { display: flex; gap: 6px; align-items: baseline; }
+.space-tab.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+.space-tab.active .count { color: inherit; opacity: 0.7; }
+
 .empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 16px 0; }
 
 dialog {
