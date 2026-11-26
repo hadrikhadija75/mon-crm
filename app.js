@@ -116,6 +116,7 @@ function escapeHtml(s = "") {
 
 function siteLink(url) {
   if (!url) return "Pas de site";
+  if (/\s/.test(url) || !url.includes(".")) return escapeHtml(url);
   const href = /^https?:\/\//i.test(url) ? url : "https://" + url;
   return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
 }
@@ -212,12 +213,26 @@ document.getElementById("file-import").addEventListener("change", async (e) => {
   try {
     const data = JSON.parse(await file.text());
     if (!Array.isArray(data)) throw new Error();
-    if (confirm(`Importer ${data.length} prospect(s) ? Les données actuelles seront remplacées.`)) {
-      prospects = data.filter((p) => p && p.id && p.company);
-      prospects.forEach((p) => {
-        if (!STAGES.some((s) => s.id === p.stage)) p.stage = "todo";
-        if (!SPACES.some((s) => s.id === p.space)) p.space = "commerces";
-      });
+    const now = new Date().toISOString();
+    const incoming = data.filter((p) => p && p.company).map((p) => ({
+      ...p,
+      id: p.id || crypto.randomUUID(),
+      stage: STAGES.some((s) => s.id === p.stage) ? p.stage : "todo",
+      space: SPACES.some((s) => s.id === p.space) ? p.space : "commerces",
+      createdAt: p.createdAt || now,
+      updatedAt: p.updatedAt || now,
+    }));
+    if (confirm(`AJOUTER ${incoming.length} prospect(s) à ta liste actuelle ?\n(Ta liste est gardée, les doublons sont ignorés.)\n\nOK = ajouter · Annuler = autres choix`)) {
+      const key = (p) => `${p.space}|${p.company.trim().toLowerCase()}`;
+      const ids = new Set(prospects.map((p) => p.id));
+      const names = new Set(prospects.map(key));
+      const added = incoming.filter((p) => !ids.has(p.id) && !names.has(key(p)));
+      prospects.push(...added);
+      save();
+      render();
+      alert(`${added.length} prospect(s) ajouté(s), ${incoming.length - added.length} doublon(s) ignoré(s).`);
+    } else if (confirm(`REMPLACER toute ta liste (${prospects.length} prospects) par ce fichier (${incoming.length}) ?\nTes prospects actuels seront effacés.`)) {
+      prospects = incoming;
       save();
       render();
     }
